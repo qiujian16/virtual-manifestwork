@@ -4,6 +4,9 @@
 *.dll
 *.so
 *.dylib
+.idea
+_output
+.api_violation.report
 
 # Test binary, built with `go test -c`
 *.test
