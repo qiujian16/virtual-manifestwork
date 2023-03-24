@@ -2,9 +2,14 @@ package client
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	jsonpatch "github.com/evanphx/json-patch"
+	"k8s.io/apimachinery/pkg/api/equality"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/watch"
 	apirequest "k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/klog/v2"
@@ -17,6 +22,8 @@ type VirtualManifestWork interface {
 	Get(ctx context.Context, name string, opts metav1.GetOptions) (*workapiv1.ManifestWork, error)
 	List(ctx context.Context, opts metav1.ListOptions) (*workapiv1.ManifestWorkList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
+	Update(ctx context.Context, old, new *workapiv1.ManifestWork, opts metav1.UpdateOptions) (*workapiv1.ManifestWork, error)
+	UpdateStatus(ctx context.Context, old, new *workapiv1.ManifestWork, opts metav1.UpdateOptions) (*workapiv1.ManifestWork, error)
 }
 
 type virtualManifestWork struct {
@@ -125,6 +132,87 @@ func (v *virtualManifestWork) Watch(ctx context.Context, opts metav1.ListOptions
 		return &transformed
 	})
 	return transformingWatcher, nil
+}
+
+func (v *virtualManifestWork) Update(ctx context.Context, old, new *workapiv1.ManifestWork, opts metav1.UpdateOptions) (*workapiv1.ManifestWork, error) {
+	// only patch finalizer for the reference work
+	if equality.Semantic.DeepEqual(new.Finalizers, old.Finalizers) {
+		return new, nil
+	}
+	oldData, err := json.Marshal(&workapiv1alpha1.ReferenceWork{
+		ObjectMeta: metav1.ObjectMeta{
+			Finalizers: old.Finalizers,
+		},
+	})
+	if err != nil {
+		return new, nil
+	}
+
+	newData, err := json.Marshal(&workapiv1alpha1.ReferenceWork{
+		ObjectMeta: metav1.ObjectMeta{
+			UID:             old.UID,
+			ResourceVersion: old.ResourceVersion,
+			Finalizers:      new.Finalizers,
+		},
+	})
+	if err != nil {
+		return new, nil
+	}
+
+	patchBytes, err := jsonpatch.CreateMergePatch(oldData, newData)
+	if err != nil {
+		return new, fmt.Errorf("failed to create patch for manifestwork %s/%s: %w", new.Name, new.Namespace, err)
+	}
+
+	updated, err := v.client.WorkV1alpha1().ReferenceWorks(new.Namespace).Patch(
+		ctx, new.Name, types.MergePatchType, patchBytes, metav1.PatchOptions{})
+	if err != nil {
+		return new, err
+	}
+
+	new.ResourceVersion = updated.ResourceVersion
+	return new, nil
+}
+
+func (v *virtualManifestWork) UpdateStatus(ctx context.Context, old, new *workapiv1.ManifestWork, opts metav1.UpdateOptions) (*workapiv1.ManifestWork, error) {
+	if equality.Semantic.DeepEqual(new.Finalizers, old.Finalizers) {
+		return new, nil
+	}
+	oldData, err := json.Marshal(&workapiv1alpha1.ReferenceWork{
+		Status: workapiv1alpha1.ReferenceWorkStatus{
+			ManifestWorkStatus: old.Status,
+		},
+	})
+	if err != nil {
+		return new, nil
+	}
+
+	newData, err := json.Marshal(&workapiv1alpha1.ReferenceWork{
+		ObjectMeta: metav1.ObjectMeta{
+			UID:             old.UID,
+			ResourceVersion: old.ResourceVersion,
+		},
+		Status: workapiv1alpha1.ReferenceWorkStatus{
+			ManifestWorkStatus: new.Status,
+		},
+	})
+	if err != nil {
+		return new, nil
+	}
+
+	patchBytes, err := jsonpatch.CreateMergePatch(oldData, newData)
+	if err != nil {
+		return new, fmt.Errorf("failed to create patch for manifestwork %s/%s: %w", new.Name, new.Namespace, err)
+	}
+
+	updated, err := v.client.WorkV1alpha1().ReferenceWorks(new.Namespace).Patch(
+		ctx, new.Name, types.MergePatchType, patchBytes, metav1.PatchOptions{}, "status")
+	if err != nil {
+		return new, err
+	}
+
+	new.ResourceVersion = updated.ResourceVersion
+	return new, nil
 }
 
 func convertToManifestWork(ctx context.Context, refWork *workapiv1alpha1.ReferenceWork, client workclientset.Interface) (*workapiv1.ManifestWork, error) {

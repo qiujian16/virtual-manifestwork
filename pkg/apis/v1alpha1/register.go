@@ -12,13 +12,6 @@ var (
 	schemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
 	// Install is a function which adds this version to a scheme
 	Install = schemeBuilder.AddToScheme
-
-	// SchemeGroupVersion generated code relies on this name
-	// Deprecated
-	SchemeGroupVersion = GroupVersion
-	// AddToScheme exists solely to keep the old generators creating valid code
-	// DEPRECATED
-	AddToScheme = schemeBuilder.AddToScheme
 )
 
 // Adds the list of known types to api.Scheme.
