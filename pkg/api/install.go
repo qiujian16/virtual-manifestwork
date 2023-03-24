@@ -30,7 +30,7 @@ func init() {
 
 func InstallVirtualManifestWorkGroup(server *genericapiserver.GenericAPIServer, client workclientset.Interface, factory workinformers.SharedInformerFactory) error {
 	v1alph1storage := map[string]rest.Storage{
-		"virtualmanifestworks": virtualmanifestwork.NewREST(client),
+		"manifestworks": virtualmanifestwork.NewREST(client),
 	}
 	apiGroupInfo := genericapiserver.NewDefaultAPIGroupInfo(v1alpha1.GroupName, Scheme, ParameterCodec, Codecs)
 	apiGroupInfo.VersionedResourcesStorageMap[v1alpha1.GroupVersion.Version] = v1alph1storage

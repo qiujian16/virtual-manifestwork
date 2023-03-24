@@ -2,6 +2,7 @@ package virtualmanifestwork
 
 import (
 	"context"
+	vwclient "github.com/qiujian16/virtual-manifestwork/pkg/client"
 	metainternalversion "k8s.io/apimachinery/pkg/apis/meta/internalversion"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -59,7 +60,8 @@ func (s *REST) List(ctx context.Context, options *metainternalversion.ListOption
 	if err := metainternalversion.Convert_internalversion_ListOptions_To_v1_ListOptions(options, &v1ListOptions, nil); err != nil {
 		return nil, err
 	}
-	return nil, nil
+	vclient := vwclient.NewVirtualManifestWork(ctx, s.client)
+	return vclient.List(ctx, v1ListOptions)
 }
 
 var _ = rest.Watcher(&REST{})
@@ -69,18 +71,14 @@ func (s *REST) Watch(ctx context.Context, options *metainternalversion.ListOptio
 	if err := metainternalversion.Convert_internalversion_ListOptions_To_v1_ListOptions(options, &v1ListOptions, nil); err != nil {
 		return nil, err
 	}
-	return nil, nil
+	vclient := vwclient.NewVirtualManifestWork(ctx, s.client)
+	return vclient.Watch(ctx, v1ListOptions)
 }
 
 var _ = rest.Getter(&REST{})
 
 // Get retrieves a managedCluster by name
 func (s *REST) Get(ctx context.Context, name string, options *metav1.GetOptions) (runtime.Object, error) {
-	return nil, nil
-}
-
-var _ = rest.Patcher(&REST{})
-
-func (s *REST) Update(ctx context.Context, name string, objInfo rest.UpdatedObjectInfo, createValidation rest.ValidateObjectFunc, updateValidation rest.ValidateObjectUpdateFunc, forceAllowCreate bool, options *metav1.UpdateOptions) (runtime.Object, bool, error) {
-	return nil, false, nil
+	vclient := vwclient.NewVirtualManifestWork(ctx, s.client)
+	return vclient.Get(ctx, name, *options)
 }
