@@ -175,7 +175,7 @@ func (v *virtualManifestWork) Update(ctx context.Context, old, new *workapiv1.Ma
 }
 
 func (v *virtualManifestWork) UpdateStatus(ctx context.Context, old, new *workapiv1.ManifestWork, opts metav1.UpdateOptions) (*workapiv1.ManifestWork, error) {
-	if equality.Semantic.DeepEqual(new.Finalizers, old.Finalizers) {
+	if equality.Semantic.DeepEqual(new.Status, old.Status) {
 		return new, nil
 	}
 	oldData, err := json.Marshal(&workapiv1alpha1.ReferenceWork{
