@@ -83,7 +83,7 @@ func (v *virtualManifestWork) Watch(ctx context.Context, opts metav1.ListOptions
 	transformingWatcher := NewTransformingWatcher(result, func(event watch.Event) *watch.Event {
 		transformed := event
 		eventType := event.Type
-		if eventType == watch.Bookmark || eventType == watch.Error {
+		if eventType == watch.Error {
 			return &transformed
 		}
 		resource, ok := event.Object.(*workapiv1alpha1.ReferenceWork)
@@ -115,8 +115,8 @@ func (v *virtualManifestWork) Watch(ctx context.Context, opts metav1.ListOptions
 					Code:    500,
 					Details: &metav1.StatusDetails{
 						Name:  resource.GetName(),
-						Group: resource.GroupVersionKind().Group,
-						Kind:  resource.GroupVersionKind().Kind,
+						Group: workapiv1.GroupName,
+						Kind:  "ManifestWork",
 						Causes: []metav1.StatusCause{
 							{
 								Type:    metav1.CauseTypeUnexpectedServerResponse,

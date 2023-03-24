@@ -2722,11 +2722,17 @@ func schema_open_cluster_managementio_api_work_v1_AppliedManifestWorkStatus(ref 
 							},
 						},
 					},
+					"evictionStartTime": {
+						SchemaProps: spec.SchemaProps{
+							Description: "EvictionStartTime represents the current appliedmanifestwork will be evicted after a grace period. An appliedmanifestwork will be evicted from the managed cluster in the following two scenarios:\n  - the manifestwork of the current appliedmanifestwork is missing on the hub, or\n  - the appliedmanifestwork hub hash does not match the current hub hash of the work agent.",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"open-cluster-management.io/api/work/v1.AppliedManifestResourceMeta"},
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Time", "open-cluster-management.io/api/work/v1.AppliedManifestResourceMeta"},
 	}
 }
 
@@ -2990,12 +2996,12 @@ func schema_open_cluster_managementio_api_work_v1_ManifestConfigOption(ref commo
 					},
 					"updateStrategy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "UpdateStrategy defines the strategy to update this manifest. UpdateStrategy is Update if it is not set, optional",
+							Description: "UpdateStrategy defines the strategy to update this manifest. UpdateStrategy is Update if it is not set.",
 							Ref:         ref("open-cluster-management.io/api/work/v1.UpdateStrategy"),
 						},
 					},
 				},
-				Required: []string{"resourceIdentifier", "updateStrategy"},
+				Required: []string{"resourceIdentifier"},
 			},
 		},
 		Dependencies: []string{
