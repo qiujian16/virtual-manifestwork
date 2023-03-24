@@ -3,6 +3,8 @@ package virtualmanifestwork
 import (
 	"context"
 	vwclient "github.com/qiujian16/virtual-manifestwork/pkg/client"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metatable "k8s.io/apimachinery/pkg/api/meta/table"
 	metainternalversion "k8s.io/apimachinery/pkg/apis/meta/internalversion"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -49,7 +51,35 @@ func (*REST) NewList() runtime.Object {
 }
 
 func (c *REST) ConvertToTable(ctx context.Context, object runtime.Object, tableOptions runtime.Object) (*metav1.Table, error) {
-	return &metav1.Table{}, nil
+	headers := []metav1.TableColumnDefinition{
+		{Name: "Name", Type: "string", Format: "name", Description: "Name is the name of manifestwork."},
+		{Name: "Age", Type: "date", Description: "Age represents the age of the manifestworks until created."},
+	}
+	table := &metav1.Table{}
+	opt, ok := tableOptions.(*metav1.TableOptions)
+	noHeaders := ok && opt != nil && opt.NoHeaders
+	if !noHeaders {
+		table.ColumnDefinitions = headers
+	}
+
+	if m, err := meta.ListAccessor(object); err == nil {
+		table.ResourceVersion = m.GetResourceVersion()
+		table.Continue = m.GetContinue()
+		table.RemainingItemCount = m.GetRemainingItemCount()
+	} else {
+		if m, err := meta.CommonAccessor(object); err == nil {
+			table.ResourceVersion = m.GetResourceVersion()
+		}
+	}
+	var err error
+	table.Rows, err = metatable.MetaToTableRow(object, func(obj runtime.Object, m metav1.Object, name, age string) ([]interface{}, error) {
+		return []interface{}{}, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return table, nil
 }
 
 var _ = rest.Lister(&REST{})
