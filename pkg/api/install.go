@@ -11,6 +11,7 @@ import (
 	genericapiserver "k8s.io/apiserver/pkg/server"
 	workclientset "open-cluster-management.io/api/client/work/clientset/versioned"
 	workinformers "open-cluster-management.io/api/client/work/informers/externalversions"
+	workapiv1 "open-cluster-management.io/api/work/v1"
 )
 
 var (
@@ -32,7 +33,7 @@ func InstallVirtualManifestWorkGroup(server *genericapiserver.GenericAPIServer, 
 	v1alph1storage := map[string]rest.Storage{
 		"manifestworks": virtualmanifestwork.NewREST(client),
 	}
-	apiGroupInfo := genericapiserver.NewDefaultAPIGroupInfo(v1alpha1.GroupName, Scheme, ParameterCodec, Codecs)
+	apiGroupInfo := genericapiserver.NewDefaultAPIGroupInfo(workapiv1.GroupName, Scheme, ParameterCodec, Codecs)
 	apiGroupInfo.VersionedResourcesStorageMap[v1alpha1.GroupVersion.Version] = v1alph1storage
 	return server.InstallAPIGroup(&apiGroupInfo)
 }

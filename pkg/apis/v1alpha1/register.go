@@ -7,10 +7,8 @@ import (
 	workapiv1 "open-cluster-management.io/api/work/v1"
 )
 
-const GroupName = "virtual.open-cluster-management.io"
-
 var (
-	GroupVersion  = schema.GroupVersion{Group: GroupName, Version: "v1alph1"}
+	GroupVersion  = schema.GroupVersion{Group: workapiv1.GroupName, Version: "v1"}
 	schemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
 	// Install is a function which adds this version to a scheme
 	Install = schemeBuilder.AddToScheme

@@ -50,6 +50,8 @@ func (v *virtualManifestWork) List(ctx context.Context, opts metav1.ListOptions)
 		return nil, err
 	}
 
+	klog.Infof("refworks items: ", len(refWorks.Items))
+
 	list := &workapiv1.ManifestWorkList{
 		Items: []workapiv1.ManifestWork{},
 	}
@@ -61,6 +63,7 @@ func (v *virtualManifestWork) List(ctx context.Context, opts metav1.ListOptions)
 		}
 		list.Items = append(list.Items, *mw)
 	}
+	klog.Infof("manifestworks items: ", len(list.Items))
 	return list, nil
 }
 
