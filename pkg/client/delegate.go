@@ -99,6 +99,14 @@ func (v *virtualManifestWork) Watch(ctx context.Context, opts metav1.ListOptions
 			}
 			return &transformed
 		}
+		if eventType == watch.Bookmark {
+			transformed.Object = &workapiv1.ManifestWork{
+				ObjectMeta: metav1.ObjectMeta{
+					ResourceVersion: resource.ResourceVersion,
+				},
+			}
+			return &transformed
+		}
 		if transformedResource, err := convertToManifestWork(ctx, resource, v.client); err != nil {
 			if kerrors.IsNotFound(err) {
 				return nil
